@@ -1,4 +1,4 @@
-# Go Telegram CryptoBot
+# CryptoBot Go
 
 A minimal implementaion of the [@CryptoBot](https://t.me/CryptoBot) API.
 
