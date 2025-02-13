@@ -4,7 +4,9 @@ A minimal implementaion of the [@CryptoBot](https://t.me/CryptoBot) API.
 
 ## Installation
 
+```sh
 go get github.com/mathoc1st/cryptobot-go
+```
 
 ## Quick Start
 
