@@ -15,12 +15,12 @@ const (
 	testToken = "API_TOKEN"
 )
 
-var cbot *cryptobot
+var cbot Client
 
 func TestMain(m *testing.M) {
 	fmt.Println("Initializing a new crypto bot instance...")
 
-	cb, err := New(Config{
+	cb, err := NewClient(Config{
 		Token:    testToken,
 		Endpoint: Testnet,
 	})

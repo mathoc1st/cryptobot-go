@@ -23,7 +23,7 @@ import (
 
 func main() {
 	// Initialize the Cryptobot client with your configuration
-	cb, err := cryptobot.New(cryptobot.Config{
+	cb, err := cryptobot.NewClient(cryptobot.Config{
 		Token:    "<API-TOKEN>", // Replace with your actual token
 		Endpoint: cryptobot.Mainnet,
 	})

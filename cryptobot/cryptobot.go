@@ -45,6 +45,49 @@ type Config struct {
 	Client   HTTPClient
 }
 
+type Client interface {
+	// HandleUpdate is meant for proccessing webhook update messages. It includes verification of update message integrety.
+	// You are free to implement your own handler. This is just a minimal implementation.
+	HandleUpdate(r *http.Request) (Update, error)
+
+	// GetMe returns basic application information. The return of the getMe API method is not documented.
+	// To mitigate any potential issues GetMe returns raw json.
+	GetMe() (json.RawMessage, error)
+
+	// CreateInvoice takes in a new invoice and returns the invoice on success.
+	CreateInvoice(in NewInvoice) (Invoice, error)
+
+	// DeleteInvoice takes in the id of the invoice you want to delete. The bool indicates whether the deletion was successful.
+	DeleteInvoice(id int64) (bool, error)
+
+	// GetInvoices takes in invoice search options and returns found invoices on success.
+	GetInvoices(inop InvoiceOptions) ([]Invoice, error)
+
+	// CreateCheck takes in a new check and returns the check on success.
+	CreateCheck(nc NewCheck) (Check, error)
+
+	// DeleteCheck takes in the id of the check you want to delete. The bool indicates whether the deletion was successful.
+	DeleteCheck(id int64) (bool, error)
+
+	// GetChecks takes in check search options and returns found checks on success.
+	GetChecks(ckops CheckOptions) ([]Check, error)
+
+	// CreateTransfer takes in a new transfer and returns the transfer on success.
+	CreateTransfer(nt NewTransfer) (Transfer, error)
+
+	// GetTransfers takes in transfer search options and returns found transfers on success.
+	GetTransfers(trops TransferOptions) ([]Transfer, error)
+
+	// GetBalance return the current application balance.
+	GetBalance() ([]Balance, error)
+
+	// GetExchangeRates return exchange rates of supported currencies.
+	GetExchangeRates() ([]ExchangeRate, error)
+
+	// GetAppStats takes in application statistics search options and return found application statistics on success.
+	GetAppStats(asops AppStatsOptions) (AppStats, error)
+}
+
 type cryptobot struct {
 	token    string
 	client   HTTPClient
@@ -54,7 +97,7 @@ type cryptobot struct {
 // New creates a new crypto bot instance. There are two endpoints: Testnet and Mainnet.
 // Testnet is used for testing and Mainnet for production. You need a different token for each of the networks.
 // It uses the default http client if none is provided.
-func New(cf Config) (*cryptobot, error) {
+func NewClient(cf Config) (Client, error) {
 	if len(cf.Token) == 0 {
 		return nil, errors.New("no token was provided for crypto bot")
 	}
@@ -91,8 +134,6 @@ func (cb cryptobot) makeRequest(method, url string, r io.Reader) ([]byte, error)
 	return body, nil
 }
 
-// HandleUpdate is meant for proccessing webhook update messages. It includes verification of update message integrety.
-// You are free to implement your own handler. This is just a minimal implementation.
 func (cb cryptobot) HandleUpdate(r *http.Request) (Update, error) {
 	sig := r.Header.Get("crypto-pay-api-signature")
 	if len(sig) == 0 {
@@ -124,8 +165,6 @@ func (cb cryptobot) HandleUpdate(r *http.Request) (Update, error) {
 	return u, nil
 }
 
-// GetMe returns basic application information. The return of the getMe API method is not documented.
-// To mitigate any potential issues GetMe returns raw json.
 func (cb cryptobot) GetMe() (json.RawMessage, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/getMe")
 	if err != nil {
@@ -150,7 +189,6 @@ func (cb cryptobot) GetMe() (json.RawMessage, error) {
 	return res.Result, nil
 }
 
-// CreateInvoice takes in a new invoice and returns the invoice on success.
 func (cb cryptobot) CreateInvoice(in NewInvoice) (Invoice, error) {
 	if err := validateNewInvoice(in); err != nil {
 		return Invoice{}, err
@@ -184,7 +222,6 @@ func (cb cryptobot) CreateInvoice(in NewInvoice) (Invoice, error) {
 	return res.Result, nil
 }
 
-// DeleteInvoice takes in the id of the invoice you want to delete. The bool indicates whether the deletion was successful.
 func (cb cryptobot) DeleteInvoice(id int64) (bool, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/deleteInvoice")
 	if err != nil {
@@ -217,7 +254,6 @@ func (cb cryptobot) DeleteInvoice(id int64) (bool, error) {
 	return res.Result, nil
 }
 
-// GetInvoices takes in invoice search options and returns found invoices on success.
 func (cb cryptobot) GetInvoices(inop InvoiceOptions) ([]Invoice, error) {
 	if err := validateInvoiceOptions(inop); err != nil {
 		return nil, err
@@ -253,7 +289,6 @@ func (cb cryptobot) GetInvoices(inop InvoiceOptions) ([]Invoice, error) {
 	return res.Result.Items, nil
 }
 
-// CreateCheck takes in a new check and returns the check on success.
 func (cb cryptobot) CreateCheck(nc NewCheck) (Check, error) {
 	if err := validateNewCheck(nc); err != nil {
 		return Check{}, err
@@ -287,7 +322,6 @@ func (cb cryptobot) CreateCheck(nc NewCheck) (Check, error) {
 	return res.Result, nil
 }
 
-// DeleteCheck takes in the id of the check you want to delete. The bool indicates whether the deletion was successful.
 func (cb cryptobot) DeleteCheck(id int64) (bool, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/deleteCheck")
 	if err != nil {
@@ -320,7 +354,6 @@ func (cb cryptobot) DeleteCheck(id int64) (bool, error) {
 	return res.Result, nil
 }
 
-// GetChecks takes in check search options and returns found checks on success.
 func (cb cryptobot) GetChecks(ckops CheckOptions) ([]Check, error) {
 	if err := validateCheckOptions(ckops); err != nil {
 		return nil, err
@@ -356,7 +389,6 @@ func (cb cryptobot) GetChecks(ckops CheckOptions) ([]Check, error) {
 	return res.Result.Items, nil
 }
 
-// CreateTransfer takes in a new transfer and returns the transfer on success.
 func (cb cryptobot) CreateTransfer(nt NewTransfer) (Transfer, error) {
 	if err := validateNewTransfer(nt); err != nil {
 		return Transfer{}, err
@@ -390,7 +422,6 @@ func (cb cryptobot) CreateTransfer(nt NewTransfer) (Transfer, error) {
 	return res.Result, nil
 }
 
-// GetTransfers takes in transfer search options and returns found transfers on success.
 func (cb cryptobot) GetTransfers(trops TransferOptions) ([]Transfer, error) {
 	if err := validateTransferOptions(trops); err != nil {
 		return nil, err
@@ -426,7 +457,6 @@ func (cb cryptobot) GetTransfers(trops TransferOptions) ([]Transfer, error) {
 	return res.Result.Items, nil
 }
 
-// GetBalance return the current application balance.
 func (cb cryptobot) GetBalance() ([]Balance, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/getBalance")
 	if err != nil {
@@ -451,7 +481,6 @@ func (cb cryptobot) GetBalance() ([]Balance, error) {
 	return res.Result, nil
 }
 
-// GetExchangeRates return exchange rates of supported currencies.
 func (cb cryptobot) GetExchangeRates() ([]ExchangeRate, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/getExchangeRates")
 	if err != nil {
@@ -476,7 +505,6 @@ func (cb cryptobot) GetExchangeRates() ([]ExchangeRate, error) {
 	return res.Result, nil
 }
 
-// GetAppStats takes in application statistics search options and return found application statistics on success.
 func (cb cryptobot) GetAppStats(asops AppStatsOptions) (AppStats, error) {
 	murl, err := url.JoinPath(cb.endpoint, "/getStats")
 	if err != nil {
