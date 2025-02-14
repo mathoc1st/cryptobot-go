@@ -33,16 +33,12 @@ type response[T resultConstraint] struct {
 	Result T               `json:"result"`
 }
 
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 type Config struct {
 	// Cryptobot API token
 	Token string
 	// Mainnet or Testnet
 	Endpoint string
-	Client   HTTPClient
+	Client   *http.Client
 }
 
 type Client interface {
@@ -90,7 +86,7 @@ type Client interface {
 
 type cryptobot struct {
 	token    string
-	client   HTTPClient
+	client   *http.Client
 	endpoint string
 }
 
