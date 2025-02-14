@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	Mainnet = "https://pay.crypt.bot/api"
-	Testnet = "https://testnet-pay.crypt.bot/api"
+	Mainnet = "https://pay.crypt.bot/api"         // [CryptoBot](http://t.me/CryptoBot)
+	Testnet = "https://testnet-pay.crypt.bot/api" // [CryptoTestnetBot](http://t.me/CryptoTestnetBot)
 )
 
 type resultConstraint interface {
@@ -90,7 +90,7 @@ type cryptobot struct {
 	endpoint string
 }
 
-// New creates a new crypto bot instance. There are two endpoints: Testnet and Mainnet.
+// NewClinet creates a new crypto bot client. There are two endpoints: Testnet and Mainnet.
 // Testnet is used for testing and Mainnet for production. You need a different token for each of the networks.
 // It uses the default http client if none is provided.
 func NewClient(cf Config) (Client, error) {
